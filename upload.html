@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Upload CSV — STAAD Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0 2rem;
+        animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-label {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 4px;
+        color: var(--accent-cyan);
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 700;
+        line-height: 1.1;
+        color: Black;
+        margin-bottom: 1rem;
+    }
+
+    .hero-title span {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-sub {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        max-width: 500px;
+        margin: 0 auto 2.5rem;
+        line-height: 1.7;
+    }
+
+    /* UPLOAD ZONE */
+    .upload-zone {
+        background: var(--bg-card);
+        border: 2px dashed var(--border);
+        border-radius: 16px;
+        padding: 3.5rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        max-width: 680px;
+        margin: 0 auto;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+        border-color: var(--accent-blue);
+        background: var(--bg-card-hover);
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.1);
+    }
+
+    .upload-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.1));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: var(--accent-blue);
+        transition: all 0.3s ease;
+    }
+
+    .upload-zone:hover .upload-icon {
+        transform: scale(1.1);
+        background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(6,182,212,0.2));
+    }
+
+    .upload-title {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-sub {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .file-input-hidden {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-selected-name {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--accent-cyan);
+        background: rgba(6,182,212,0.1);
+        padding: 6px 14px;
+        border-radius: 20px;
+        display: none;
+        margin-top: 1rem;
+    }
+
+    /* COLUMNS INFO */
+    .columns-card {
+        max-width: 680px;
+        margin: 2rem auto 0;
+        animation: fadeInUp 1s ease;
+    }
+
+    .col-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .col-item {
+        background: whitesmoke;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .col-name {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--accent-cyan);
+        font-weight: 700;
+    }
+
+    .col-desc {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        line-height: 1.3;
+    }
+
+    .col-dot-req  { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-blue);   flex-shrink: 0; }
+    .col-dot-opt  { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted);    flex-shrink: 0; }
+
+    /* ERROR */
+    .alert-staad {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.3);
+        border-radius: 10px;
+        color: #f87171;
+        padding: 1rem 1.5rem;
+        font-size: 0.875rem;
+        max-width: 680px;
+        margin: 1.5rem auto 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    /* FEATURES */
+    .features-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        max-width: 680px;
+        margin: 2.5rem auto 0;
+    }
+
+    .feature-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        animation: fadeInUp 1.1s ease;
+    }
+
+    .feature-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-3px);
+    }
+
+    .feature-icon {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-label {
+        font-family: var(--font-display);
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-color:Black;
+        letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 576px) {
+        .col-grid { grid-template-columns: 1fr; }
+        .features-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-label">⚡ XGBoost ML Engine</div>
+    <h1 class="hero-title">
+        Structural Section<br><span>Optimizer</span>
+    </h1>
+    <p class="hero-sub">
+        Upload your STAAD.Pro member data as CSV and get AI-powered optimized section recommendations instantly.
+    </p>
+</div>
+
+{% if error %}
+<div class="alert-staad">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ error }}
+</div>
+{% endif %}
+
+<!-- UPLOAD FORM -->
+<form method="POST" action="{% url 'upload_file' %}" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
+    <div class="upload-zone" id="dropZone">
+        <input type="file" name="data_file" accept=".csv,.xlsx,.xls" class="file-input-hidden" id="csvInput" required>
+        <div class="upload-icon">
+            <i class="fas fa-file-csv"></i>
+        </div>
+        <div class="upload-title">Drop your CSV or Excel file here</div>
+        <div class="upload-sub">or click anywhere to browse</div>
+        <button type="submit" class="btn-primary-staad" id="analyzeBtn" style="display:none; position:relative; z-index:2;">
+            <i class="fas fa-brain me-2"></i>ANALYZE STRUCTURE
+        </button>
+        <div class="file-selected-name" id="fileNameDisplay"></div>
+    </div>
+</form>
+
+<!-- COLUMN GUIDE -->
+<div class="columns-card card-staad p-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="fas fa-table" style="color:var(--accent-cyan);"></i>
+        <span style="font-family:var(--font-display); font-weight:600; letter-spacing:1px; font-size:0.95rem;">REQUIRED CSV COLUMNS</span>
+        <span style="font-family:var(--font-mono); font-size:0.6rem; background:rgba(59,130,246,0.15); color:var(--accent-blue); padding:2px 8px; border-radius:20px; margin-left:auto;">REQUIRED</span>
+    </div>
+    <div class="col-grid mb-3">
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">member_type</div><div class="col-desc">beam / column / brace</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">span_m</div><div class="col-desc">Member length in meters</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">axial_kN</div><div class="col-desc">Axial force (kN)</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">moment_x_kNm</div><div class="col-desc">Moment X-axis (kNm)</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">moment_z_kNm</div><div class="col-desc">Moment Z-axis (kNm)</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">shear_y_kN</div><div class="col-desc">Shear force Y (kN)</div></div></div>
+        <div class="col-item"><div class="col-dot-req"></div><div><div class="col-name">utilization</div><div class="col-desc">Current ratio (e.g. 0.85)</div></div></div>
+    </div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <span style="font-family:var(--font-mono); font-size:0.6rem; background:rgba(71,85,105,0.3); color:var(--text-muted); padding:2px 8px; border-radius:20px;">OPTIONAL</span>
+    </div>
+    <div class="col-grid">
+        <div class="col-item"><div class="col-dot-opt"></div><div><div class="col-name">section_name</div><div class="col-desc">e.g. ISMB300, RCC 500x250</div></div></div>
+        <div class="col-item"><div class="col-dot-opt"></div><div><div class="col-name">current_area_cm2</div><div class="col-desc">Cross-sectional area cm²</div></div></div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features-row">
+    <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-label">XGBoost ML</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-label">Instant Results</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-label">Export CSV</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dropZone   = document.getElementById('dropZone');
+const csvInput   = document.getElementById('csvInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const fileNameEl = document.getElementById('fileNameDisplay');
+const form       = document.getElementById('uploadForm');
+
+csvInput.addEventListener('change', function() {
+    if (this.files[0]) showFile(this.files[0]);
+});
+
+function showFile(file) {
+    fileNameEl.textContent = '📎 ' + file.name;
+    fileNameEl.style.display = 'inline-block';
+    analyzeBtn.style.display = 'inline-block';
+}
+
+// Drag & drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        csvInput.files = dt.files;
+        showFile(file);
+    }
+});
+
+// Loading state on submit
+form.addEventListener('submit', () => {
+    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ANALYZING...';
+    analyzeBtn.disabled = true;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}STAAD Structural Optimizer{% endblock %}</title>
+    {% load static %}
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        :root {
+            --bg-primary: #f4f4f5;
+            --bg-secondary: #dde4f0;
+            --bg-card: white;
+            --bg-card-hover: #7291df;
+            --border: #1e293b;
+            --border-glow: #2563eb33;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-orange: #f97316;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-yellow: #eab308;
+            --text-primary: #328ae3;
+            --text-secondary: #265fa9;
+            --text-muted: #0a418e;
+            --font-display: 'Rajdhani', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, #1e3a5f18 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, #0c2a4418 0%, transparent 50%);
+        }
+
+        /* NAVBAR */
+        .navbar-staad {
+            background: rgba(14, 70, 201, 0.95);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand-staad {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary) !important;
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .brand-accent {
+            color: var(--accent-cyan);
+        }
+
+        .nav-badge {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* PAGE WRAPPER */
+        .page-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* CARDS */
+        .card-staad {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .card-staad:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.08);
+        }
+
+        /* BUTTONS */
+        .btn-primary-staad {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border: none;
+            color: white;
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary-staad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+            color: white;
+        }
+
+        .btn-outline-staad {
+            background: transparent;
+            border: 1px solid var(--border);
+        
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-outline-staad:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        /* TAGS */
+        .tag-beam    { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .tag-column  { background: rgba(234,179,8,0.15);  color: #facc15; }
+        .tag-brace   { background: rgba(168,85,247,0.15); color: #c084fc; }
+
+        .util-safe  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+        .util-over  { background: rgba(239,68,68,0.15);  color: #f87171; }
+        .util-under { background: rgba(234,179,8,0.15);  color: #facc15; }
+
+        .member-tag, .status-tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* FOOTER */
+        .footer-staad {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            margin-top: 4rem;
+            letter-spacing: 1px;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar-staad">
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <a href="{% url 'index' %}" class="navbar-brand-staad">
+                <div class="brand-icon">
+                    <i class="fas fa-drafting-compass" style="color:white;"></i>
+                </div>
+                STAAD<span class="brand-accent">.OPT</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="nav-badge">ML v1.0</span>
+                <a href="{% url 'index' %}" class="btn-outline-staad" style="font-size:0.8rem; padding:0.4rem 1rem;">
+                    <i class="fas fa-upload"></i> New Upload
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="page-wrapper">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-staad">
+    STAAD STRUCTURAL OPTIMIZER &nbsp;|&nbsp; ML-POWERED SECTION ANALYSIS &nbsp;|&nbsp; CIVIL ENGINEERING SUITE
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Node Displacement — STAAD Optimizer{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;animation:fadeIn .5s ease}
+    .page-title{font-family:var(--font-display);font-size:1.6rem;font-weight:700;letter-spacing:1px}
+    .file-chip{font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border);padding:4px 12px;border-radius:20px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem;animation:fadeIn .7s ease}
+    .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;display:flex;align-items:center;justify-content:space-between;transition:all .3s ease}
+    .kpi-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+    .kpi-card.blue{border-left:3px solid var(--accent-blue)}.kpi-card.red{border-left:3px solid var(--accent-red)}
+    .kpi-card.yellow{border-left:3px solid var(--accent-yellow)}.kpi-card.green{border-left:3px solid var(--accent-green)}.kpi-card.cyan{border-left:3px solid var(--accent-cyan)}
+    .kpi-label{font-family:var(--font-mono);font-size:.58rem;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:.3rem}
+    .kpi-value{font-family:var(--font-display);font-size:2rem;font-weight:700;line-height:1}
+    .kpi-sub{font-size:.65rem;color:var(--text-muted);margin-top:.2rem}
+    .kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .icon-blue{background:rgba(59,130,246,.15);color:var(--accent-blue)}.icon-red{background:rgba(239,68,68,.15);color:var(--accent-red)}
+    .icon-yellow{background:rgba(234,179,8,.15);color:var(--accent-yellow)}.icon-green{background:rgba(34,197,94,.15);color:var(--accent-green)}.icon-cyan{background:rgba(6,182,212,.15);color:var(--accent-cyan)}
+    .critical-bar{background:var(--bg-card);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;animation:fadeIn .8s ease}
+    .critical-bar-label{font-family:var(--font-mono);font-size:.62rem;letter-spacing:2px;color:#f87171;text-transform:uppercase;white-space:nowrap}
+    .crit-chip{font-family:var(--font-mono);font-size:.7rem;font-weight:700;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25);padding:3px 10px;border-radius:20px}
+    .toolbar{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;animation:fadeIn .9s ease}
+    .search-box{position:relative;flex:1;min-width:180px;max-width:350px}
+    .search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85rem}
+    .search-input{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.5rem .75rem .5rem 2.2rem;font-size:.82rem;width:100%;outline:none;font-family:var(--font-body);transition:border-color .2s}
+    .search-input:focus{border-color:var(--accent-blue)}.search-input::placeholder{color:var(--text-muted)}
+    .filter-select{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);padding:.5rem 1rem;font-size:.8rem;outline:none;cursor:pointer;font-family:var(--font-body)}
+    .table-wrapper{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;animation:fadeIn 1.1s ease}
+    .results-table{width:100%;border-collapse:collapse;font-size:.8rem}
+    .results-table thead{background:var(--bg-secondary);border-bottom:1px solid var(--border)}
+    .results-table th{font-family:var(--font-mono);font-size:.58rem;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;padding:.9rem 1rem;text-align:left;white-space:nowrap;font-weight:500}
+    .results-table td{padding:.75rem 1rem;border-bottom:1px solid rgba(30,41,59,.4);vertical-align:middle;color:var(--text-secondary)}
+    .results-table tbody tr{transition:background .2s}
+    .results-table tbody tr:hover{background:var(--bg-card-hover)}
+    .results-table tbody tr:last-child td{border-bottom:none}
+    .node-id{font-family:var(--font-mono);font-weight:700;color:var(--text-primary);font-size:.9rem}
+    .lc-badge{font-family:var(--font-mono);font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap}
+    .lc-dl{background:rgba(59,130,246,.15);color:#60a5fa}.lc-ll{background:rgba(249,115,22,.15);color:#fb923c}.lc-combo{background:rgba(168,85,247,.15);color:#c084fc}
+    .disp-val{font-family:var(--font-mono);font-size:.78rem}
+    .disp-pos{color:#4ade80}.disp-neg{color:#f87171}.disp-zero{color:var(--text-muted)}
+    .resultant-badge{font-family:var(--font-mono);font-weight:700;font-size:.82rem;padding:4px 10px;border-radius:6px;display:inline-block}
+    .status-critical{background:rgba(239,68,68,.18);color:#f87171}
+    .status-warning{background:rgba(234,179,8,.18);color:#facc15}
+    .status-safe{background:rgba(34,197,94,.18);color:#4ade80}
+    .status-text{font-size:.6rem;color:var(--text-muted);margin-top:2px}
+    .export-bar{display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;flex-wrap:wrap;gap:1rem}
+    .count-text{font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted)}
+    @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)};.table-wrapper{overflow-x:auto}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-header">
+    <div>
+        <div class="page-title">Node Displacement Results</div>
+        <div class="mt-1"><span class="file-chip"><i class="fas fa-file-excel me-1"></i>{{ file_name }}</span></div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'export_csv' %}" class="btn-outline-staad"><i class="fas fa-download"></i> Export CSV</a>
+        <a href="{% url 'index' %}" class="btn-primary-staad" style="text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;"><i class="fas fa-upload"></i> New Upload</a>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card blue"><div><div class="kpi-label">Total Nodes</div><div class="kpi-value" style="color:var(--text-primary);">{{ summary.total_nodes }}</div><div class="kpi-sub">Structural nodes</div></div><div class="kpi-icon icon-blue"><i class="fas fa-circle-nodes"></i></div></div>
+    <div class="kpi-card red"><div><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--accent-red);">{{ summary.critical_nodes }}</div><div class="kpi-sub">&gt; {{ summary.threshold_critical }} mm</div></div><div class="kpi-icon icon-red"><i class="fas fa-triangle-exclamation"></i></div></div>
+    <div class="kpi-card yellow"><div><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ summary.warning_nodes }}</div><div class="kpi-sub">{{ summary.threshold_warning }}–{{ summary.threshold_critical }} mm</div></div><div class="kpi-icon icon-yellow"><i class="fas fa-circle-exclamation"></i></div></div>
+    <div class="kpi-card green"><div><div class="kpi-label">Safe Nodes</div><div class="kpi-value" style="color:var(--accent-green);">{{ summary.safe_nodes }}</div><div class="kpi-sub">&lt; {{ summary.threshold_warning }} mm</div></div><div class="kpi-icon icon-green"><i class="fas fa-shield-halved"></i></div></div>
+    <div class="kpi-card cyan"><div><div class="kpi-label">Max Resultant</div><div class="kpi-value" style="color:var(--accent-cyan);font-size:1.5rem;">{{ summary.max_resultant }}<span style="font-size:.9rem;"> mm</span></div><div class="kpi-sub">Node {{ summary.max_resultant_node }} · {{ summary.max_resultant_lc }}</div></div><div class="kpi-icon icon-cyan"><i class="fas fa-arrows-up-down-left-right"></i></div></div>
+</div>
+
+{% if summary.top5_critical %}
+<div class="critical-bar">
+    <div class="critical-bar-label"><i class="fas fa-radiation me-1"></i> Top Critical Nodes</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        {% for n in summary.top5_critical %}<span class="crit-chip">Node {{ n.node }} — {{ n.max_resultant }} mm</span>{% endfor %}
+    </div>
+    <div style="margin-left:auto;font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);">Avg: {{ summary.avg_resultant }} mm &nbsp;|&nbsp; Max Y: {{ summary.max_Y_mm }} mm</div>
+</div>
+{% endif %}
+
+<div class="toolbar">
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" class="search-input" id="searchInput" placeholder="Search by Node number..."></div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <i class="fas fa-filter" style="color:var(--text-muted);font-size:.8rem;"></i>
+        <select class="filter-select" id="lcFilter"><option value="">All Load Cases</option>{% for lc in lc_list %}<option value="{{ lc }}">{{ lc }}</option>{% endfor %}</select>
+        <select class="filter-select" id="statusFilter"><option value="">All Status</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="safe">Safe</option></select>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <table class="results-table">
+        <thead><tr><th>NODE</th><th>LOAD CASE</th><th>X (mm)</th><th>Y (mm)</th><th>Z (mm)</th><th>RESULTANT (mm)</th><th>rX (rad)</th><th>STATUS</th></tr></thead>
+        <tbody id="tableBody">
+            {% for r in results %}
+            <tr class="data-row" data-node="{{ r.node }}" data-lc="{{ r.load_case_short }}" data-status="{{ r.status }}">
+                <td><span class="node-id">{{ r.node }}</span></td>
+                <td>{% if r.load_case_short == 'DL' %}<span class="lc-badge lc-dl">DL</span>{% elif r.load_case_short == 'LL' %}<span class="lc-badge lc-ll">LL</span>{% else %}<span class="lc-badge lc-combo">{{ r.load_case_short }}</span>{% endif %}</td>
+                <td><span class="disp-val {% if r.X_mm > 0 %}disp-pos{% elif r.X_mm < 0 %}disp-neg{% else %}disp-zero{% endif %}">{{ r.X_mm }}</span></td>
+                <td><span class="disp-val {% if r.Y_mm > 0 %}disp-pos{% elif r.Y_mm < 0 %}disp-neg{% else %}disp-zero{% endif %}">{{ r.Y_mm }}</span></td>
+                <td><span class="disp-val {% if r.Z_mm > 0 %}disp-pos{% elif r.Z_mm < 0 %}disp-neg{% else %}disp-zero{% endif %}">{{ r.Z_mm }}</span></td>
+                <td><div class="resultant-badge status-{{ r.status }}">{{ r.Resultant_mm }}</div><div class="status-text">{% if r.status == 'critical' %}⚠ Critical{% elif r.status == 'warning' %}⚡ Warning{% else %}✓ Safe{% endif %}</div></td>
+                <td><span class="disp-val" style="color:var(--text-muted);">{{ r.rX_rad }}</span></td>
+                <td>{% if r.status == 'critical' %}<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent-red);box-shadow:0 0 6px var(--accent-red);"></span>{% elif r.status == 'warning' %}<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent-yellow);box-shadow:0 0 6px var(--accent-yellow);"></span>{% else %}<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent-green);"></span>{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);font-family:var(--font-mono);">No records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="export-bar">
+    <div class="count-text" id="countText">Showing {{ results|length }} records</div>
+    <a href="{% url 'export_csv' %}" class="btn-outline-staad"><i class="fas fa-download"></i> Download CSV</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const searchInput=document.getElementById('searchInput'),lcFilter=document.getElementById('lcFilter'),statusFilter=document.getElementById('statusFilter'),countText=document.getElementById('countText'),rows=document.querySelectorAll('.data-row');
+function applyFilters(){const search=searchInput.value.toLowerCase().trim(),lc=lcFilter.value.toLowerCase(),status=statusFilter.value.toLowerCase();let visible=0;rows.forEach(row=>{const ms=!search||(row.dataset.node||'').includes(search),ml=!lc||(row.dataset.lc||'').toLowerCase()===lc,mst=!status||(row.dataset.status||'')=== status,show=ms&&ml&&mst;row.style.display=show?'':'none';if(show)visible++;});countText.textContent=`Showing ${visible} of ${rows.length} records`;}
+searchInput.addEventListener('input',applyFilters);lcFilter.addEventListener('change',applyFilters);statusFilter.addEventListener('change',applyFilters);
+rows.forEach((row,i)=>{row.style.opacity='0';row.style.transition='opacity 0.3s ease';setTimeout(()=>{row.style.opacity='1';},15+i*8);});
+</script>
+{% endblock %}
